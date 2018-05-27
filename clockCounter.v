@@ -10,9 +10,7 @@ module clockCounter (input start, rst, clk, input [5:0] cntLimit, input tready,
 reg [3:0] clkCntr;
 reg [5:0] clkPkgCntr;
 
-//reg [5:0] sendData_buf;
 reg sendData_pulse;
-reg sendData_pulse_dly;
 
 //reg rd_clk;
 reg rd_en;
@@ -54,36 +52,9 @@ always @ (posedge clk)
                 clkPkgCntr <= clkPkgCntr;
                 sendData_pulse <= #1 1'b0;
             end
-/// delayed send Data pulse 
-always @ (posedge clk)
-    if (rst)
-        sendData_pulse_dly <= 0;
-    else
-        sendData_pulse_dly <= sendData_pulse;
         
 wire wr_en;
 assign wr_en = (~full) && sendData_pulse;        
-
-// FSM
-always @ (negedge clk)
-    if (rst)
-        state <= 3'o0;
-    else
-        state <= state_nxt;
-
-always @ (state or tready or empty )
-    case (state)
-        idle:
-              if (~empty && tready)
-                state_nxt <= sendState1;  
-              else
-                  state_nxt <= idle;
-        sendState1 :
-             state_nxt <= (tready)? sendState2 : sendState1;
-        sendState2 : state_nxt <= (tready)? idle : sendState2;
-        default: state_nxt <= idle;
-
-    endcase
 
 // as soon as the fifo becomes no empty the tvalid goes high
 always @ (posedge clk)
@@ -103,7 +74,6 @@ always @ (posedge clk)
     end
     else
         if ( ~empty && tready)
-           // if (state == sendState1 || state == sendState2) 
             begin
                 nibble <= nibble+ 1;
             end
@@ -131,16 +101,9 @@ always @ (negedge clk)
     end
     else
         if ( ~empty && tready)
-           // if (state == sendState1 || state == sendState2) 
-            begin
                 rd_en <= 1'b1;
-            end
-            // else begin
-                // rd_en <= 1'b0;
-            // end
-            else begin
-             rd_en <= 1'b0;
-        end
+            else 
+			rd_en <= 1'b0;
            
 wire wr_ack;
 fifo_generator_0 dataFifo (
