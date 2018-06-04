@@ -106,6 +106,8 @@ always @ (negedge clk)
 			rd_en <= 1'b0;
            
 wire wr_ack;
+
+// internal FIFO block, to hold the data if the slave is not ready to accept it.
 fifo_generator_0 dataFifo (
   .rst(rst),        // input wire rst
   .wr_clk(clk),  // input wire wr_clk
